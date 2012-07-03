@@ -169,7 +169,7 @@ class MvcHelper {
 	}
 	
 	public function admin_header_cell($label) {
-		return '<th scope="col" class="manage-column">'.$label.'</th>';
+		return '<th scope="col" class="manage-column">'.MvcInflector::titleize(str_replace('.', ' ', $label)).'</th>';
 	}
 	
 	public function admin_table_cells($controller, $objects) {
@@ -189,7 +189,10 @@ class MvcHelper {
 		if (!empty($column['value_method'])) {
 			$value = $controller->{$column['value_method']}($object);
 		} else {
-			$value = $object->$column['key'];
+                        $subs = explode('.', $column['key']);
+                        foreach ($subs as $sub)
+                            $object = $object->$sub;
+			$value = $object;
 		}
 		return '<td>'.$value.'</td>';
 	}
