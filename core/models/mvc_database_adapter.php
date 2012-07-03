@@ -74,7 +74,7 @@ class MvcDatabaseAdapter {
 		}
 		foreach ($joins as $join) {
 			$type = empty($join['type']) ? 'JOIN' : $join['type'];
-			$clauses[] = $type.' '.$join['table'].' '.$join['alias'].' ON '.$join['on'];
+			$clauses[] = $type.' '.$join['table'].' `'.$join['alias'].'` ON '.$join['on'];
 		}
 		return implode(' ', $clauses);
 	}
