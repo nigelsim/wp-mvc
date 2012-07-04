@@ -80,7 +80,7 @@ class MvcModelObject {
 				$associated_objects = $model->find(array(
 					'selects' => $association['fields'],
 					'joins' => array(
-						'table' => $this->process_table_name($association['join_table']),
+						'table' => $association['join_table'],
 						'on' => $join_alias.'.'.$association['association_foreign_key'].' = '.$model_name.'.'.$model->primary_key,
 						'alias' => $join_alias
 					),
