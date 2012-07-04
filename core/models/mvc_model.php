@@ -722,7 +722,7 @@ class MvcModel {
 			if (isset($this->$attribute)) {
 				$message = $value[0];
 				$url = $value[1];
-				$message = 'The \''.$attribute.'\' attribute (in the '.$this->name.' model) '.$message.' as of WP MVC 1.2';
+				$message = 'Obsolete functionality: The \''.$attribute.'\' attribute (in the '.$this->name.' model) '.$message.' as of WP MVC 1.2';
 				$message .= ' (<a href="'.$url.'">read more</a>).';
 				MvcError::fatal($message);
 			}
