@@ -46,6 +46,17 @@ class MvcModelObject {
 		MvcError::warning('Undefined property: '.$class.'::'.$property_name.'.');
 	}
 	
+	public function __isset($property_name) {
+		if (!empty($this->__settings['properties'][$property_name])) {
+			$property = $this->__settings['properties'][$property_name];
+			if ($property['type'] == 'association') {
+				return true;
+			}
+		}
+                
+                return false;
+        }
+	
 	private function get_associated_objects($association) {
 		$model_name = $association['class'];
 		$model = MvcModelRegistry::get_model($model_name);
