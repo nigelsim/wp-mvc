@@ -190,9 +190,19 @@ class MvcHelper {
 			$value = $controller->{$column['value_method']}($object);
 		} else {
                         $subs = explode('.', $column['key']);
+                        $value = $object;
                         foreach ($subs as $sub)
-                            $object = $object->$sub;
-			$value = $object;
+                        {
+                          if (isset($value->$sub))
+                          {
+                            $value = $value->$sub;
+                          }
+                          else
+                          {
+                            $value = '';
+                            break;
+                          }
+                        }
 		}
 		return '<td>'.$value.'</td>';
 	}
