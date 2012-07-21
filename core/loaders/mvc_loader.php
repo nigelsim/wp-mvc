@@ -11,26 +11,26 @@ abstract class MvcLoader {
 	protected $query_vars = array();
 
 	function __construct() {
-	
+
 		if (!defined('MVC_CORE_PATH')) {
 			define('MVC_CORE_PATH', MVC_PLUGIN_PATH.'core/');
 		}
-		
+
 		$this->core_path = MVC_CORE_PATH;
-		
+
 		$this->load_core();
 		$this->load_plugins();
-		
+
 		$this->file_includer = new MvcFileIncluder();
 		$this->file_includer->include_all_app_files('config/bootstrap.php');
 		$this->file_includer->include_all_app_files('config/routes.php');
-		
+
 		$this->dispatcher = new MvcDispatcher();
-		
+
 	}
-	
+
 	protected function load_core() {
-		
+
 		$files = array(
 			'mvc_error',
 			'mvc_configuration',
@@ -69,15 +69,15 @@ abstract class MvcLoader {
 			'shells/mvc_shell',
 			'shells/mvc_shell_dispatcher'
 		);
-		
+
 		foreach ($files as $file) {
 			require_once $this->core_path.$file.'.php';
 		}
-		
+
 	}
-	
+
 	protected function load_plugins() {
-	
+
 		$plugins = $this->get_ordered_plugins();
 		$plugin_app_paths = array();
 		foreach ($plugins as $plugin) {
@@ -90,14 +90,14 @@ abstract class MvcLoader {
 		));
 
 		$this->plugin_app_paths = $plugin_app_paths;
-	
+
 	}
-	
+
 	protected function get_ordered_plugins() {
-	
+
 		$plugins = get_option('mvc_plugins', array());
 		$plugin_app_paths = array();
-		
+
 		// Allow plugins to be loaded in a specific order by setting a PluginOrder config value like
 		// this ('all' is an optional token; it includes all unenumerated plugins):
 		// MvcConfiguration::set(array(
@@ -117,21 +117,21 @@ abstract class MvcLoader {
 				$plugins = array_merge($plugin_order, $unordered_plugins);
 			}
 		}
-		
+
 		return $plugins;
-		
+
 	}
-	
+
 	public function init() {
-	
+
 		$this->load_controllers();
 		$this->load_libs();
 		$this->load_models();
 		$this->load_settings();
 		$this->load_functions();
-	
+		$this->register_shortcodes();
 	}
-	
+
 	public function filter_post_link($permalink, $post) {
 		if (substr($post->post_type, 0, 4) == 'mvc_') {
 			$model_name = substr($post->post_type, 4);
@@ -148,12 +148,12 @@ abstract class MvcLoader {
 		}
 		return $permalink;
 	}
-	
+
 	public function register_widgets() {
 		foreach ($this->plugin_app_paths as $plugin_app_path) {
 			$directory = $plugin_app_path.'widgets/';
 			$widget_filenames = $this->file_includer->require_php_files_in_directory($directory);
-  
+
 			$path_segments_to_remove = array(WP_CONTENT_DIR, '/plugins/', '/app/');
 			$plugin = str_replace($path_segments_to_remove, '', $plugin_app_path);
 
@@ -164,93 +164,171 @@ abstract class MvcLoader {
 			}
 		}
 	}
-	
+
 	protected function load_controllers() {
-	
+
 		foreach ($this->plugin_app_paths as $plugin_app_path) {
-		
+
 			$admin_controller_filenames = $this->file_includer->require_php_files_in_directory($plugin_app_path.'controllers/admin/');
 			$public_controller_filenames = $this->file_includer->require_php_files_in_directory($plugin_app_path.'controllers/');
-			
+
 			foreach ($admin_controller_filenames as $filename) {
 				if (preg_match('/admin_([^\/]+)_controller\.php/', $filename, $match)) {
 					$this->admin_controller_names[] = $match[1];
 				}
 			}
-			
+
 			foreach ($public_controller_filenames as $filename) {
 				if (preg_match('/([^\/]+)_controller\.php/', $filename, $match)) {
 					$this->public_controller_names[] = $match[1];
 				}
 			}
-		
+
 		}
-		
+
 	}
-	
+
 	protected function load_libs() {
-		
+
 		foreach ($this->plugin_app_paths as $plugin_app_path) {
-		
+
 			$this->file_includer->require_php_files_in_directory($plugin_app_path.'libs/');
-			
+
 		}
-		
+
 	}
-	
+
 	protected function load_models() {
-		
+
 		$models = array();
-		
+
 		foreach ($this->plugin_app_paths as $plugin_app_path) {
-		
+
 			$model_filenames = $this->file_includer->require_php_files_in_directory($plugin_app_path.'models/');
-			
+
 			foreach ($model_filenames as $filename) {
 				$models[] = MvcInflector::class_name_from_filename($filename);
 			}
-		
+
 		}
-		
+
 		$this->model_names = array();
-		
+
 		foreach ($models as $model) {
 			$this->model_names[] = $model;
 			$model_class = MvcInflector::camelize($model);
 			$model_instance = new $model_class();
 			MvcModelRegistry::add_model($model, $model_instance);
 		}
-		
+
 	}
-	
+
 	protected function load_settings() {
-		
+
 		$settings_names = array();
-		
+
 		foreach ($this->plugin_app_paths as $plugin_app_path) {
-		
+
 			$settings_filenames = $this->file_includer->require_php_files_in_directory($plugin_app_path.'settings/');
-			
+
 			foreach ($settings_filenames as $filename) {
 				$settings_names[] = MvcInflector::class_name_from_filename($filename);
 			}
-		
+
 		}
-		
+
 		$this->settings_names = $settings_names;
-		
-	}
-	
-	protected function load_functions() {
-		
-		foreach ($this->plugin_app_paths as $plugin_app_path) {
-		
-			$this->file_includer->require_php_files_in_directory($plugin_app_path.'functions/');
-			
-		}
-	
+
 	}
 
+	protected function load_functions() {
+
+		foreach ($this->plugin_app_paths as $plugin_app_path) {
+
+			$this->file_includer->require_php_files_in_directory($plugin_app_path.'functions/');
+
+		}
+
+	}
+
+	protected function register_shortcodes() {
+		$shortcodes = MvcConfiguration::get('ShortCodes');
+		foreach ($shortcodes as $shortcode => $options){
+			add_shortcode($shortcode, array($this, 'dispatch_shortcode'));
+		}
+	}
+
+	public function dispatch_shortcode($atts, $content, $shortcode) {
+		$shortcodes = MvcConfiguration::get('ShortCodes');
+		if (isset($shortcodes[$shortcode])) {
+
+			$default_config = array(
+				// by default, only allow actions that start with sc_
+				'allow_actions' => '/sc_\w*|shortcode/',
+				// by default, deny actions that don't start with sc_
+				'deny_actions' => '',
+			);
+			$defaults_options = array(
+				'is_shortcode' => true,
+				'shortcode' => $shortcode,
+				'action' => 'shortcode',
+				'content' => $content,
+			);
+
+			// get shortcodes config from MvcConfiguration
+			$shortcode_config = $shortcodes[$shortcode];
+			// merge with default shortcodes config
+			$config = array_merge($default_config, $shortcode_config);
+
+			// pick up controller and possibly action from options in config
+			if (isset($config['options'])) {
+				$configured_options = $config['options'];
+			} else {
+				// if no options section in config - assume whole config is an options section
+				$configured_options = $config;
+			}
+
+			// merge config options with default options
+			$options = array_merge($defaults_options, $configured_options);
+
+			// merge shortcode parameter options
+			$options = array_merge($options, $atts);
+
+			// check the action against allowed and denied
+			$action = $options['action'];
+			$allowed = $config['allow_actions'];
+			$denied = $config['deny_actions'];
+			if ($this->checkActionAgainstPattern($action, $allowed, true) === false) {
+				$content = 'MvcError: Action "'.$action.'" is not allowed for shortcodes by configuration allow_actions:['.$allowed.']';
+			} else if ($this->checkActionAgainstPattern($action, $denied, false) === true) {
+				$content = 'MvcError: Action "'.$action.'" is denied for shortcodes by configuration deny_actions:['.$denied.']';
+			} else {
+				// passed allowed and denied - dispatch the action
+				$content = $this->dispatcher->dispatch($options);
+			}
+		}
+		return do_shortcode($content);
+	}
+
+	protected function checkActionAgainstPattern($action, $pattern, $defaultMatch) {
+		if (empty($pattern)) {
+			return $defaultMatch;
+		}
+
+		if (is_string($pattern)) {
+			$pattern = array($pattern);
+		}
+
+		$patterns = $pattern;
+		foreach ($patterns as $pattern) {
+			if ($action === $pattern) {
+				return true;
+			} else if (preg_match($pattern, $action) === 1) {
+				return true;
+			}
+		}
+		return false;
+	}
 }
 
 ?>
