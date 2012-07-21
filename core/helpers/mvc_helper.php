@@ -167,10 +167,9 @@ class MvcHelper {
 		return '<tr>'.$html.'</tr>';
 
 	}
-
 	public function admin_header_cell($column) {
 		$colclass = (isset($column['key'])) ? $column['key'] : 'nonedata';
-		return '<th scope="col" class="manage-column col-style-'.$colclass.'">'.$column['label'].'</th>';
+		return '<th scope="col" class="manage-column col-style-'.$colclass.'">'.MvcInflector::titleize(str_replace('.', ' ', $column['label'])).'</th>';
 	}
 
 	public function admin_table_cells($controller, $objects) {
@@ -190,13 +189,40 @@ class MvcHelper {
 		if (!empty($column['value_method'])) {
 			$value = $controller->{$column['value_method']}($object);
 		} else {
-			$value = $object->$column['key'];
+                        $subs = explode('.', $column['key']);
+                        $value = $object;
+                        foreach ($subs as $sub)
+                        {
+                          if (isset($value->$sub))
+                          {
+                            $value = $value->$sub;
+                          }
+                          else
+                          {
+                            $value = '';
+                            break;
+                          }
+                        }
 		}
 		return '<td>'.$value.'</td>';
 	}
 
 	public function admin_actions_cell($controller, $object) {
 		$links = array();
+                
+                if (isset($controller->custom_actions))
+                {
+                  foreach($controller->custom_actions as $action)
+                  {
+                      if (!is_array($action))
+                          $action = array('action' => $action);
+
+                      $links[] = '<a href="'.MvcRouter::admin_url(array('object' => $object, 'action' => $action['action']))
+                            .'" title="'.(isset($action['title']) ? $action['title'] : '').'">'
+                            .(isset($action['name']) ? $action['name'] : MvcInflector::titleize($action['action'])).'</a>';
+                  }
+                }
+                
 		$object_name = empty($object->__name) ? 'Item #'.$object->__id : $object->__name;
 		$encoded_object_name = $this->esc_attr($object_name);
 		$links[] = '<a href="'.MvcRouter::admin_url(array('object' => $object, 'action' => 'edit')).'" title="Edit '.$encoded_object_name.'">Edit</a>';
