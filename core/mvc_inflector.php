@@ -5,7 +5,8 @@ class MvcInflector {
 	// Plural inflector rules
 	protected static $_plural = array(
 		'rules' => array(
-			'/status$/i' => 'statuses',
+			'/Status$/' => 'Statuses',
+			'/status$/' => 'statuses',
 			'/quiz$/i' => 'quizzes',
 			'/^ox$/i' => '\oxen',
 			'/([m|l])ouse$/i' => '\1ice',
@@ -66,7 +67,8 @@ class MvcInflector {
 	// Singular inflector rules
 	protected static $_singular = array(
 		'rules' => array(
-			'/statuses$/i' => 'status',
+			'/Statuses$/' => 'Status',
+			'/statuses$/' => 'status',
 			'/quizzes$/i' => 'quiz',
 			'/matrices$/i' => 'matrix',
 			'/(vert|ind)ices$/i' => '\1ex',
@@ -118,33 +120,33 @@ class MvcInflector {
 		'trousers', 'trout','tuna', 'Vermontese', 'Wenchowese', 'whiting', 'wildebeest',
 		'Yengeese'
 	);
-	
+
 	protected static $_cache = array();
-	
+
 	protected static function set_cached_patterns() {
-	
+
 		self::$_singular['merged'] = array();
 		self::$_singular['merged']['irregular'] = array_merge(self::$_singular['irregular'], array_flip(self::$_plural['irregular']));
 		self::$_singular['merged']['uninflected'] = array_merge(self::$_singular['uninflected'], self::$_uninflected);
-		
+
 		self::$_singular['cached'] = array();
 		self::$_singular['cached']['irregular'] = '(?:'.join('|', array_keys(self::$_singular['merged']['irregular'])).')';
 		self::$_singular['cached']['uninflected'] = '(?:'.join('|', self::$_singular['merged']['uninflected']).')';
-		
+
 		self::$_plural['merged'] = array();
 		self::$_plural['merged']['irregular'] = array_merge(self::$_plural['irregular'], array_flip(self::$_singular['irregular']));
 		self::$_plural['merged']['uninflected'] = array_merge(self::$_plural['uninflected'], self::$_uninflected);
-		
+
 		self::$_plural['cached'] = array();
 		self::$_plural['cached']['irregular'] = '(?:'.join('|', array_keys(self::$_plural['merged']['irregular'])).')';
 		self::$_plural['cached']['uninflected'] = '(?:'.join('|', self::$_plural['merged']['uninflected']).')';
-		
+
 	}
-	
+
 	public static function class_name_from_filename($filename) {
 		return MvcInflector::camelize(str_replace('.php', '', $filename));
 	}
-	
+
 	public static function camelize($string) {
 		$string = str_replace('_', ' ', $string);
 		$string = str_replace('-', ' ', $string);
@@ -152,30 +154,30 @@ class MvcInflector {
 		$string = str_replace(' ', '', $string);
 		return $string;
 	}
-	
+
 	public static function tableize($string) {
 		$string = MvcInflector::underscore($string);
 		$string = MvcInflector::pluralize($string);
 		return $string;
 	}
-	
+
 	public static function underscore($string) {
 		$string = preg_replace('/[A-Z]/', ' $0', $string);
 		$string = trim(strtolower($string));
 		$string = str_replace(' ', '_', $string);
 		return $string;
 	}
-	
+
 	public static function pluralize($string) {
-	
+
 		if (isset(self::$_cache['pluralize'][$string])) {
 			return self::$_cache['pluralize'][$string];
 		}
-		
+
 		if (!isset($_plural['cached'])) {
 			self::set_cached_patterns();
 		}
-	
+
 		if (preg_match('/(.*)\\b('.self::$_plural['cached']['irregular'].')$/i', $string, $regs)) {
 			self::$_cache['pluralize'][$string] = $regs[1].substr($string, 0, 1).substr(self::$_plural['merged']['irregular'][strtolower($regs[2])], 1);
 			return self::$_cache['pluralize'][$string];
@@ -192,23 +194,23 @@ class MvcInflector {
 				return self::$_cache['pluralize'][$string];
 			}
 		}
-		
+
 		self::$_cache['pluralize'][$string] = $string;
-		
+
 		return $string;
-		
+
 	}
-	
+
 	public static function singularize($string) {
 
 		if (isset(self::$_cache['singularize'][$string])) {
 			return self::$_cache['singularize'][$string];
 		}
-		
+
 		if (!isset($_singular['cached'])) {
 			self::set_cached_patterns();
 		}
-		
+
 		if (preg_match('/(.*)\\b('.self::$_singular['cached']['irregular'].')$/i', $string, $regs)) {
 			self::$_cache['singularize'][$string] = $regs[1].substr($string, 0, 1).substr(self::$_singular['merged']['irregular'][strtolower($regs[2])], 1);
 			return self::$_cache['singularize'][$string];
@@ -225,20 +227,20 @@ class MvcInflector {
 				return self::$_cache['singularize'][$string];
 			}
 		}
-		
+
 		self::$_cache['singularize'][$string] = $string;
-		
+
 		return $string;
-		
+
 	}
-	
+
 	public static function titleize($string) {
 		$string = preg_replace('/[A-Z]/', ' $0', $string);
 		$string = trim(str_replace('_', ' ', $string));
 		$string = ucwords($string);
 		return $string;
 	}
-	
+
 	public static function pluralize_titleize($string) {
 		$string = MvcInflector::pluralize(MvcInflector::titleize($string));
 		return $string;
@@ -247,7 +249,7 @@ class MvcInflector {
 	public static function rules($type, $rules, $reset = false) {
 
 		$variable_name = '_'.$type;
-		
+
 		foreach ($rules as $rule => $pattern) {
 			if (is_array($pattern)) {
 				if ($reset) {
@@ -270,9 +272,9 @@ class MvcInflector {
 				}
 			}
 		}
-		
+
 		self::${$variable_name}['rules'] = $rules + self::${$variable_name}['rules'];
-		
+
 	}
 
 }
