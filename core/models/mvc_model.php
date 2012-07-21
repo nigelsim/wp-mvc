@@ -355,7 +355,7 @@ class MvcModel {
 							case 'belongs_to':
 								$join = array(
 									'table' => $join_model->table,
-									'on' => $join_model_name.'.'.$join_model->primary_key.' = '.$this->name.'.'.$association['foreign_key'],
+									'on' => $join_model_name.'.'.$association['local_key'].' = '.$this->name.'.'.$association['foreign_key'],
 									'alias' => $join_model_name
 								);
 								break;
@@ -364,7 +364,7 @@ class MvcModel {
 								// To do: test this
 								$join = array(
 									'table' => $this->table,
-									'on' => $join_model_name.'.'.$association['foreign_key'].' = '.$this->name.'.'.$this->primary_key,
+									'on' => $join_model_name.'.'.$association['foreign_key'].' = '.$this->name.'.'.$association['local_key'],
 									'alias' => $join_model_name
 								);
 								break;
@@ -374,7 +374,7 @@ class MvcModel {
 								// The join for the HABTM join table
 								$join = array(
 									'table' => $this->process_table_name($association['join_table']),
-									'on' => $join_table_alias.'.'.$association['foreign_key'].' = '.$this->name.'.'.$this->primary_key,
+									'on' => $join_table_alias.'.'.$association['foreign_key'].' = '.$this->name.'.'.$association['local_key'],
 									'alias' => $join_table_alias
 								);
 								// The join for the association model's table
@@ -526,7 +526,7 @@ class MvcModel {
 						case 'has_many':
 							$associated_objects = $model->find(array(
 								'selects' => $association['fields'],
-								'conditions' => array($association['foreign_key'] => $object->__id),
+								'conditions' => array($association['foreign_key'] => $object->{$association['local_key']}),
 								'recursive' => $recursive
 							));
 							$object->{MvcInflector::tableize($model_name)} = $associated_objects;
@@ -538,10 +538,10 @@ class MvcModel {
 								'selects' => $association['fields'],
 								'joins' => array(
 									'table' => $this->process_table_name($association['join_table']),
-									'on' => $join_alias.'.'.$association['association_foreign_key'].' = '.$model_name.'.'.$model->primary_key,
+									'on' => $join_alias.'.'.$association['association_foreign_key'].' = '.$model_name.'.'.$association['local_key'],
 									'alias' => $join_alias
 								),
-								'conditions' => array($join_alias.'.'.$association['foreign_key'] => $object->__id),
+								'conditions' => array($join_alias.'.'.$association['foreign_key'] => $object->{$association['local_key']}),
 								'recursive' => $recursive
 							));
 							$object->{MvcInflector::tableize($model_name)} = $associated_objects;
@@ -631,6 +631,7 @@ class MvcModel {
 						'type' => 'belongs_to',
 						'name' => $association_name,
 						'class' => $association_name,
+						'local_key' => $this->primary_key,
 						'foreign_key' => MvcInflector::underscore($association_name).'_id',
 						'includes' => null,
 						'dependent' => false
@@ -641,6 +642,7 @@ class MvcModel {
 						'type' => 'belongs_to',
 						'name' => empty($value['name']) ? $association_name : $value['name'],
 						'class' => empty($value['class']) ? $association_name : $value['class'],
+						'local_key' => empty($value['local_key']) ? $this->primary_key : $value['local_key'],
 						'foreign_key' => empty($value['foreign_key']) ? MvcInflector::underscore($association_name).'_id' : $value['foreign_key'],
 						'includes' => isset($value['fields']) ? $value['fields'] : null,
 						'dependent' => isset($value['dependent']) ? $value['dependent'] : false
@@ -660,6 +662,7 @@ class MvcModel {
 						'type' => 'has_many',
 						'name' => $association_name,
 						'class' => $association_name,
+						'local_key' => $this->primary_key,
 						'foreign_key' => MvcInflector::underscore($this->name).'_id',
 						'fields' => null,
 						'includes' => null,
@@ -671,6 +674,7 @@ class MvcModel {
 						'type' => 'has_many',
 						'name' => empty($value['name']) ? $association_name : $value['name'],
 						'class' => empty($value['class']) ? $association_name : $value['class'],
+						'local_key' => empty($value['local_key']) ? $this->primary_key : $value['local_key'],
 						'foreign_key' => empty($value['foreign_key']) ? MvcInflector::underscore($this->name).'_id' : $value['foreign_key'],
 						'fields' => isset($value['fields']) ? $value['fields'] : null,
 						'includes' => null,
@@ -695,6 +699,7 @@ class MvcModel {
 						'type' => 'has_and_belongs_to_many',
 						'name' => $association_name,
 						'class' => $association_name,
+						'local_key' => empty($value['local_key']) ? $this->primary_key : $value['local_key'],
 						'foreign_key' => isset($value['foreign_key']) ? $value['foreign_key'] : MvcInflector::underscore($this->name).'_id',
 						'association_foreign_key' => isset($value['association_foreign_key']) ? $value['association_foreign_key'] : MvcInflector::underscore($association_name).'_id',
 						'join_table' => $this->process_table_name($value['join_table']),
