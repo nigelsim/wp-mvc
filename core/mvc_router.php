@@ -1,14 +1,15 @@
 <?php
 
 class MvcRouter {
-	
+
 	public $routes = array();
 
 	public function public_url($options=array()) {
 		$options = apply_filters('mvc_before_public_url', $options);
 		$defaults = array(
 			'action' => 'index',
-			'controller' => null
+			'controller' => null,
+			'extraparams' => null,
 		);
 		$options = array_merge($defaults, $options);
 		$routes = self::get_public_routes();
@@ -79,6 +80,11 @@ class MvcRouter {
 				$url .= $options['id'].'/';
 			}
 		}
+		if (!empty($options['extraparams']) && is_array($options['extraparams'])) {
+			foreach ($options['extraparams'] as $key => $value){
+				$url .= '&'.$key.'='.urlencode($value);
+			}
+		}
 		return $url;
 	}
 
@@ -98,7 +104,7 @@ class MvcRouter {
 		}
 		return $url;
 	}
-	
+
 	public function admin_url_params($options=array()) {
 		$params = array();
 		if (!empty($options['controller'])) {
@@ -113,7 +119,7 @@ class MvcRouter {
 		}
 		return $params;
 	}
-	
+
 	public function admin_page_param($options=array()) {
 		if (is_string($options)) {
 			$options = array('model' => $options);
@@ -128,7 +134,7 @@ class MvcRouter {
 		$_this =& MvcRouter::get_instance();
 		$_this->add_public_route($route, $defaults);
 	}
-	
+
 	public function admin_ajax_connect($route) {
 		$_this =& MvcRouter::get_instance();
 		$_this->add_admin_ajax_route($route);
@@ -157,12 +163,12 @@ class MvcRouter {
 		$return =& $_this->routes['admin_ajax'];
 		return $return;
 	}
-	
+
 	public function add_public_route($route, $defaults) {
 		$_this =& self::get_instance();
 		$_this->routes['public'][] = array($route, $defaults);
 	}
-	
+
 	public function add_admin_ajax_route($route) {
 		$_this =& self::get_instance();
 		if (empty($route['wp_action'])) {
