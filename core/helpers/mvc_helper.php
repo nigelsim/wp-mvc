@@ -3,15 +3,15 @@
 class MvcHelper {
 
 	protected $file_includer = null;
-	
+
 	function __construct() {
 		$this->file_includer = new MvcFileIncluder();
 		$this->init();
 	}
-	
+
 	public function init() {
 	}
-	
+
 	public function render_view($path, $view_vars=array()) {
 		extract($view_vars);
 		$filepath = $this->file_includer->find_first_app_file_or_core_file('views/'.$path.'.php');
@@ -24,13 +24,13 @@ class MvcHelper {
 		}
 		require $filepath;
 	}
-	
+
 	public function esc_attr($string) {
 		return esc_attr($string);
 	}
-	
+
 	public function attributes_html($attributes, $valid_attributes_array_or_tag) {
-	
+
 		$event_attributes = array(
 			'standard' => array(
 				'onclick',
@@ -53,7 +53,7 @@ class MvcHelper {
 				'onsubmit'
 			)
 		);
-	
+
 		// To do: add on* event attributes
 		$valid_attributes_by_tag = array(
 			'a' => array(
@@ -137,41 +137,42 @@ class MvcHelper {
 				$event_attributes['form']
 			)
 		);
-		
+
 		foreach ($valid_attributes_by_tag as $key => $valid_attributes) {
 			$valid_attributes = array_merge($event_attributes['standard'], $valid_attributes);
 			$valid_attributes = self::array_flatten($valid_attributes);
 			$valid_attributes_by_tag[$key] = $valid_attributes;
 		}
-		
+
 		$valid_attributes = is_array($valid_attributes_array_or_tag) ? $valid_attributes_array_or_tag : $valid_attributes_by_tag[$valid_attributes_array_or_tag];
-		
+
 		$attributes = array_intersect_key($attributes, array_flip($valid_attributes));
-		
+
 		$attributes_html = '';
 		foreach ($attributes as $key => $value) {
 			$attributes_html .= ' '.$key.'="'.esc_attr($value).'"';
 		}
 		return $attributes_html;
-	
+
 	}
-	
+
 	// Move these into an AdminHelper
-	
+
 	public function admin_header_cells($controller) {
 		$html = '';
 		foreach ($controller->default_columns as $key => $column) {
-			$html .= $this->admin_header_cell($column['label']);
+			$html .= $this->admin_header_cell($column);
 		}
 		$html .= $this->admin_header_cell('');
 		return '<tr>'.$html.'</tr>';
-		
+
 	}
-	
-	public function admin_header_cell($label) {
-		return '<th scope="col" class="manage-column">'.$label.'</th>';
+
+	public function admin_header_cell($column) {
+		$colclass = (isset($column['key'])) ? $column['key'] : 'nonedata';
+		return '<th scope="col" class="manage-column col-style-'.$colclass.'">'.$column['label'].'</th>';
 	}
-	
+
 	public function admin_table_cells($controller, $objects) {
 		$html = '';
 		foreach ($objects as $object) {
@@ -184,7 +185,7 @@ class MvcHelper {
 		}
 		return $html;
 	}
-	
+
 	public function admin_table_cell($controller, $object, $column) {
 		if (!empty($column['value_method'])) {
 			$value = $controller->{$column['value_method']}($object);
@@ -193,7 +194,7 @@ class MvcHelper {
 		}
 		return '<td>'.$value.'</td>';
 	}
-	
+
 	public function admin_actions_cell($controller, $object) {
 		$links = array();
 		$object_name = empty($object->__name) ? 'Item #'.$object->__id : $object->__name;
@@ -204,17 +205,17 @@ class MvcHelper {
 		$html = implode(' | ', $links);
 		return '<td>'.$html.'</td>';
 	}
-	
+
 	// To do: move this into an MvcUtilities class (?)
-	
+
 	private function array_flatten($array) {
 
 		foreach ($array as $key => $value){
 			$array[$key] = (array)$value;
 		}
-		
+
 		return call_user_func_array('array_merge', $array);
-	
+
 	}
 
 }
