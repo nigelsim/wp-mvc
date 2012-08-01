@@ -44,7 +44,7 @@ class MvcDispatcher {
 		}
 		$controller->after_action($action);
 
-		if ($options['is_shortcode']) {
+		if (isset($options['is_shortcode']) && $options['is_shortcode']) {
 			return $controller->render_to_string($controller->views_path.$action, $options);
 		} else if (!$controller->view_rendered) {
 			$controller->render_view($controller->views_path.$action, $options);

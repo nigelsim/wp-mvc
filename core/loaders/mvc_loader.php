@@ -252,7 +252,11 @@ abstract class MvcLoader {
 	}
 
 	protected function register_shortcodes() {
+
 		$shortcodes = MvcConfiguration::get('ShortCodes');
+		if (empty($shortcodes) || !is_array($shortcodes))
+			return;
+
 		foreach ($shortcodes as $shortcode => $options){
 			add_shortcode($shortcode, array($this, 'dispatch_shortcode'));
 		}
