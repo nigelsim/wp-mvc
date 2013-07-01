@@ -20,9 +20,9 @@ class MvcFormHelper extends MvcHelper {
 		}
 
 		if ($options['public']) {
-			$html = '<form action="'.MvcRouter::public_url($router_options).'" method="post">';
+			$html = '<form action="'.MvcRouter::public_url($router_options).'" enctype="multipart/form-data" method="post">';
 		} else {
-			$html = '<form action="'.MvcRouter::admin_url($router_options).'" method="post">';
+			$html = '<form action="'.MvcRouter::admin_url($router_options).'" enctype="multipart/form-data" method="post">';
 		}
 
 		if ($object_id) {
