@@ -46,6 +46,14 @@ class MvcAdminController extends MvcController {
 			$object = $this->params['data'][$this->model->name];
 			if (empty($object['id'])) {
 				$this->model->create($this->params['data']);
+                                
+                                $uploads = array();
+                                $uploads[$this->model->name][$this->model->primary_key] = $this->model->insert_id;
+                                $this->setup_uploads($uploads);
+                                if (count($uploads[$this->model->name]) > 1) {
+                                    $this->model->save($uploads);
+                                }
+                                
 				$this->flash('notice', 'Successfully created!');
 				if (!empty($this->params['redirect'])) {
 					$url = $this->params['redirect'];
@@ -55,6 +63,7 @@ class MvcAdminController extends MvcController {
 				}
 				$this->redirect($url);
 			} else {
+                                $this->setup_uploads($this->params['data']);
 				if ($this->model->save($this->params['data'])) {
 					$this->flash('notice', 'Successfully saved!');
 					if (!empty($this->params['redirect'])) {
@@ -69,6 +78,30 @@ class MvcAdminController extends MvcController {
 			}
 		}
 	}
+        
+        
+        /**
+         * Setup the upload file/fields based on the field name and the ID.
+         * 
+         * @param type $params
+         * @return type
+         */
+        public function setup_uploads(&$params = NULL) {
+            if ($params === NULL) {
+                $params = array();
+            }
+            $upload_dir = wp_upload_dir();
+            
+            foreach ($this->model->files as $field_name) {
+                if (strlen($_FILES['data']["tmp_name"][$this->model->name][$field_name]) == 0) continue;
+                $dir_name = "/cc_beach_analytics/reports/".$this->model->name."/".$params[$this->model->name][$this->model->primary_key];
+                mkdir($upload_dir['basedir'].$dir_name, 0777, true);
+                $file_name = $dir_name."/".$field_name;
+                copy($_FILES['data']["tmp_name"][$this->model->name][$field_name], $upload_dir['basedir'].$file_name);
+                $params[$this->model->name][$field_name] = $file_name;
+            }
+            return $params;
+        }
 
 	public function create() {
 		if (!empty($this->params['data'][$this->model->name])) {
