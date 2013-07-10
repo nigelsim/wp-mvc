@@ -41,7 +41,7 @@ class MvcAdminController extends MvcController {
 		}
 	}
 
-	public function create_or_save() {
+	public function create_or_save($redirect=true) {
 		if (!empty($this->params['data'][$this->model->name])) {
 			$object = $this->params['data'][$this->model->name];
 			if (empty($object['id'])) {
@@ -55,6 +55,10 @@ class MvcAdminController extends MvcController {
                                 }
                                 
 				$this->flash('notice', 'Successfully created!');
+                                if (!$redirect) {
+                                    // return the ID if we aren't redirecting
+                                    return $this->model->insert_id;
+                                }
 				if (!empty($this->params['redirect'])) {
 					$url = $this->params['redirect'];
 				} else {
@@ -65,6 +69,9 @@ class MvcAdminController extends MvcController {
 			} else {
                                 $this->setup_uploads($this->params['data']);
 				if ($this->model->save($this->params['data'])) {
+                                        if (!$redirect) {
+                                            return $object['id'];
+                                        }
 					$this->flash('notice', 'Successfully saved!');
 					if (!empty($this->params['redirect'])) {
 						$url = $this->params['redirect'];
@@ -73,6 +80,9 @@ class MvcAdminController extends MvcController {
 						$this->refresh();
 					}
 				} else {
+                                    if (!$redirect) {
+                                        return false;
+                                    }
 					$this->flash('error', $this->model->validation_error_html);
 				}
 			}
